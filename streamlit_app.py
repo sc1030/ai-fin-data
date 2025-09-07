@@ -186,20 +186,24 @@ elif selected == "Upload & Parse":
 # ---------------------------
 # MARKET & NEWS
 # ---------------------------
-elif selected == "Market & News":
-    st.header("📈 Market Data & 📰 News")
+elif tab == "Market & News":
+    st.header("Market data & News")
     col1, col2 = st.columns(2)
-
     with col1:
-        ticker = st.text_input("Ticker (e.g. AAPL, MSFT, TCS.NS)", "AAPL")
+        ticker = st.text_input("Ticker (e.g. AAPL, MSFT, TCS.NS)", value="AAPL")
         period = st.selectbox("Period", ["1mo","3mo","6mo","1y","2y","5y"], index=3)
-        if st.button("Fetch Market Data"):
+        if st.button("Fetch market data"):
             df = fetch_yfinance_history(ticker, period=period)
-            if df is not None and not df.empty:
+            if df is None or df.empty:
+                st.error("No data")
+            else:
+                st.success(f"Fetched {len(df)} rows for {ticker}")
                 st.dataframe(df.head())
-                fig = px.line(df, x="date", y="close", title=f"{ticker} Close Price")
+                fig = px.line(df, x='Date', y='Close', title=f"{ticker} Close Price")
                 st.plotly_chart(fig, use_container_width=True)
-                st.session_state["last_df"] = df
+                if st.button("Save market data to DB"):
+                    n = save_financial_dataframe(ticker, df)
+                    st.info(f"Inserted ~{n} rows")
 
     with col2:
         query = st.text_input("News query", "stocks")
