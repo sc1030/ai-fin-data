@@ -4,13 +4,12 @@ __pycache__/
 
 # Virtual environment
 venv/
-.env
+
 
 # Database
-*.db
 
-# Streamlit
-.streamlit/
+
+
 
 # VSCode/IDE
 .vscode/
@@ -19,6 +18,6 @@ venv/
 
 # Ignore large data files
 *.csv
-*.db
-*.sqlite
+
+
 
