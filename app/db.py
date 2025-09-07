@@ -1,4 +1,3 @@
-# app/db.py
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -22,14 +21,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-# app/db.py
-
 def init_db():
     """Initialize database tables (only if they don't exist)"""
     import app.models  # Ensure models are imported
 
     try:
-        Base.metadata.create_all(bind=engine, checkfirst=True)
+        Base.metadata.create_all(bind=engine)
         print("✅ Database initialized (tables created if missing)")
     except Exception as e:
         print(f"⚠️ Skipped table creation: {e}")
