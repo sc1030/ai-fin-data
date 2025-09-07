@@ -149,7 +149,6 @@ elif selected == "Upload & Parse":
                 if parsed["tables"]:
                     for i, df in enumerate(parsed["tables"]):
                         st.write(f"Table {i+1}", df.head())
-                        # Save table to FinancialData if columns exist
                         if set(["date","open","high","low","close","volume"]).issubset([c.lower() for c in df.columns]):
                             inserted = save_financial_dataframe(fname, df)
                             st.success(f"✅ Table {i+1}: {inserted} rows saved to database")
@@ -170,7 +169,6 @@ elif selected == "Upload & Parse":
                     for name, df in sheets.items():
                         st.write("Sheet:", name)
                         st.dataframe(df.head())
-                        # Save sheet to FinancialData if columns exist
                         lower_cols = [c.lower() for c in df.columns]
                         if set(["date","open","high","low","close","volume"]).issubset(lower_cols):
                             inserted = save_financial_dataframe(name, df)
@@ -186,24 +184,20 @@ elif selected == "Upload & Parse":
 # ---------------------------
 # MARKET & NEWS
 # ---------------------------
-elif tab == "Market & News":
-    st.header("Market data & News")
+elif selected == "Market & News":
+    st.header("📈 Market Data & 📰 News")
     col1, col2 = st.columns(2)
+
     with col1:
-        ticker = st.text_input("Ticker (e.g. AAPL, MSFT, TCS.NS)", value="AAPL")
+        ticker = st.text_input("Ticker (e.g. AAPL, MSFT, TCS.NS)", "AAPL")
         period = st.selectbox("Period", ["1mo","3mo","6mo","1y","2y","5y"], index=3)
-        if st.button("Fetch market data"):
+        if st.button("Fetch Market Data"):
             df = fetch_yfinance_history(ticker, period=period)
-            if df is None or df.empty:
-                st.error("No data")
-            else:
-                st.success(f"Fetched {len(df)} rows for {ticker}")
+            if df is not None and not df.empty:
                 st.dataframe(df.head())
-                fig = px.line(df, x='Date', y='Close', title=f"{ticker} Close Price")
+                fig = px.line(df, x="date", y="close", title=f"{ticker} Close Price")
                 st.plotly_chart(fig, use_container_width=True)
-                if st.button("Save market data to DB"):
-                    n = save_financial_dataframe(ticker, df)
-                    st.info(f"Inserted ~{n} rows")
+                st.session_state["last_df"] = df
 
     with col2:
         query = st.text_input("News query", "stocks")
