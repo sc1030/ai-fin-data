@@ -15,3 +15,7 @@ venv/
 # VSCode/IDE
 .vscode/
 .idea/
+  
+
+/data/*.csv
+*.db
