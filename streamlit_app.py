@@ -28,12 +28,7 @@ init_db()
 # ---------------------------
 st.markdown("""
 <style>
-/* Background */
-.main {
-    background-color: #f4faff;
-}
-
-/* Navbar */
+.main { background-color: #f4faff; }
 [data-testid="stHorizontalBlock"] {
     background: linear-gradient(90deg, #0d6efd, #004080);
     border-radius: 12px;
@@ -42,23 +37,9 @@ st.markdown("""
 }
 .st-emotion-cache-1v0mbdj {color: white !important; font-weight: 600;}
 .st-emotion-cache-1v0mbdj:hover {color: #d9eaff !important;}
-
-/* Cards */
-div[data-testid="stMetricValue"] {
-    color: #004080;
-    font-size: 22px;
-    font-weight: 700;
-}
-div[data-testid="stMetricLabel"] {
-    color: #0d6efd;
-    font-weight: 500;
-}
-
-/* Headers */
-h1, h2, h3 {
-    color: #004080;
-    font-weight: 700;
-}
+div[data-testid="stMetricValue"] { color: #004080; font-size: 22px; font-weight: 700; }
+div[data-testid="stMetricLabel"] { color: #0d6efd; font-weight: 500; }
+h1, h2, h3 { color: #004080; font-weight: 700; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -104,7 +85,6 @@ def save_financial_dataframe(ticker, df):
             date_val = pd.to_datetime(row["date"]).to_pydatetime()
         elif "Date" in row:
             date_val = pd.to_datetime(row["Date"]).to_pydatetime()
-
         fd = FinancialData(
             ticker=ticker,
             date=date_val,
@@ -125,8 +105,6 @@ def save_financial_dataframe(ticker, df):
 # ---------------------------
 if selected == "Dashboard":
     st.title("📊 Dashboard Overview")
-
-    # Summary cards
     db = SessionLocal()
     reports_count = db.query(Report).count()
     tickers = db.query(FinancialData.ticker).distinct().count()
@@ -144,46 +122,57 @@ if selected == "Dashboard":
     rows = db.query(FinancialData).order_by(FinancialData.date.desc()).limit(100).all()
     db.close()
     if rows:
-        df = pd.DataFrame([{
-            "date": r.date,
-            "ticker": r.ticker,
-            "close": r.close
-        } for r in rows])
+        df = pd.DataFrame([{"date": r.date, "ticker": r.ticker, "close": r.close} for r in rows])
         fig = px.line(df, x="date", y="close", color="ticker", title="Recent Prices")
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No market data yet. Go to Market & News tab to fetch.")
 
 # ---------------------------
-# UPLOAD
+# UPLOAD & PARSE
 # ---------------------------
 elif selected == "Upload & Parse":
     st.header("📂 Upload & Parse Financial Reports")
     uploaded_file = st.file_uploader("Upload PDF/Excel/CSV", type=['pdf','xlsx','xls','csv'])
+    
     if uploaded_file:
         fname = uploaded_file.name
         file_bytes = uploaded_file.read()
-
-        if fname.lower().endswith(".pdf"):
-            parsed = parse_pdf(file_bytes)
-            st.text_area("Extracted Text", value=parsed["text"][:3000], height=250)
-            if parsed["tables"]:
-                for i, df in enumerate(parsed["tables"]):
-                    st.write(f"Table {i+1}", df.head())
-            if st.button("Save Report to DB"):
-                summary = summarize_text(parsed["text"], max_length=150)
-                save_sourcefile(fname, "pdf")
-                save_report_to_db(fname, parsed["text"], summary)
-                st.success("✅ Report saved")
-
-        else:
-            sheets = parse_excel(file_bytes, fname)
-            for name, df in sheets.items():
-                st.write("Sheet:", name)
-                st.dataframe(df.head())
-            if st.button("Save Excel metadata"):
-                save_sourcefile(fname, "excel", metadata={"sheets": list(sheets.keys())})
-                st.success("✅ Excel metadata saved")
+        try:
+            # PDF
+            if fname.lower().endswith(".pdf"):
+                parsed = parse_pdf(file_bytes)
+                if not parsed["text"].strip():
+                    st.warning("⚠️ No text extracted from this PDF.")
+                else:
+                    st.text_area("Extracted Text", value=parsed["text"][:3000], height=250)
+                if parsed["tables"]:
+                    for i, df in enumerate(parsed["tables"]):
+                        st.write(f"Table {i+1}", df.head())
+                else:
+                    st.info("No tables found in PDF.")
+                if st.button("Save Report to DB"):
+                    summary = summarize_text(parsed["text"], max_length=150)
+                    save_sourcefile(fname, "pdf")
+                    save_report_to_db(fname, parsed["text"], summary)
+                    st.success("✅ Report saved")
+            
+            # Excel / CSV
+            else:
+                try:
+                    sheets = parse_excel(file_bytes, fname)
+                    if not sheets:
+                        st.warning("⚠️ No sheets found in the uploaded Excel/CSV file.")
+                    for name, df in sheets.items():
+                        st.write("Sheet:", name)
+                        st.dataframe(df.head())
+                    if st.button("Save Excel metadata"):
+                        save_sourcefile(fname, "excel", metadata={"sheets": list(sheets.keys())})
+                        st.success("✅ Excel metadata saved")
+                except Exception as e:
+                    st.error(f"❌ Failed to parse Excel/CSV: {str(e)}")
+        except Exception as e:
+            st.error(f"❌ Failed to process file: {str(e)}")
 
 # ---------------------------
 # MARKET & NEWS
@@ -195,7 +184,6 @@ elif selected == "Market & News":
     with col1:
         ticker = st.text_input("Ticker (e.g. AAPL, MSFT, TCS.NS)", "AAPL")
         period = st.selectbox("Period", ["1mo","3mo","6mo","1y","2y","5y"], index=3)
-
         if st.button("Fetch Market Data"):
             df = fetch_yfinance_history(ticker, period=period)
             if df is not None and not df.empty:
