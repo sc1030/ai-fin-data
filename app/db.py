@@ -22,7 +22,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+# app/db.py
+
 def init_db():
-    """Initialize database tables"""
-    import app.models  # Import models so Base.metadata.create_all works
-    Base.metadata.create_all(bind=engine)
+    """Initialize database tables (only if they don't exist)"""
+    import app.models  # Ensure models are imported
+
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+        print("✅ Database initialized (tables created if missing)")
+    except Exception as e:
+        print(f"⚠️ Skipped table creation: {e}")
