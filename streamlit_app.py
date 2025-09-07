@@ -139,7 +139,7 @@ elif selected == "Upload & Parse":
         fname = uploaded_file.name
         file_bytes = uploaded_file.read()
         try:
-            # PDF
+            # ---------------- PDF ----------------
             if fname.lower().endswith(".pdf"):
                 parsed = parse_pdf(file_bytes)
                 if not parsed["text"].strip():
@@ -157,15 +157,23 @@ elif selected == "Upload & Parse":
                     save_report_to_db(fname, parsed["text"], summary)
                     st.success("✅ Report saved")
             
-            # Excel / CSV
+            # ---------------- Excel / CSV ----------------
             else:
                 try:
                     sheets = parse_excel(file_bytes, fname)
                     if not sheets:
                         st.warning("⚠️ No sheets found in the uploaded Excel/CSV file.")
+
                     for name, df in sheets.items():
                         st.write("Sheet:", name)
                         st.dataframe(df.head())
+
+                        # Auto-save to FinancialData if columns exist
+                        required_cols = {"date","ticker","open","high","low","close","volume"}
+                        if required_cols.issubset(set(df.columns.str.lower())):
+                            inserted = save_financial_dataframe("CSV_Ticker", df)
+                            st.success(f"✅ {inserted} rows saved to FinancialData")
+
                     if st.button("Save Excel metadata"):
                         save_sourcefile(fname, "excel", metadata={"sheets": list(sheets.keys())})
                         st.success("✅ Excel metadata saved")
