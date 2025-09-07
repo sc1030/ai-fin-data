@@ -17,4 +17,8 @@ venv/
 .idea/
   
 
+# Ignore large data files
+*.csv
+*.db
+*.sqlite
 
