@@ -5,15 +5,14 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Get DB URL from environment (for Postgres/MySQL in Streamlit Secrets)
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Get DB URL from .env or fallback to SQLite
+DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./app_data.db"
 
-if not DATABASE_URL:
-    # Fallback to SQLite if no DB URL is provided
-    DATABASE_URL = "sqlite:///./app_data.db"
+# Handle SQLite separately
+if DATABASE_URL.startswith("sqlite:///"):
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
 
-# For SQLite we need check_same_thread, for others we don’t
-if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         DATABASE_URL, connect_args={"check_same_thread": False}
     )
@@ -25,11 +24,8 @@ Base = declarative_base()
 
 
 def init_db():
-    """Initialize database tables (only if they don't exist)"""
+    """Initialize database tables (only if missing)"""
     import app.models  # Ensure models are imported
 
-    try:
-        Base.metadata.create_all(bind=engine)
-        print("✅ Database initialized (tables created if missing)")
-    except Exception as e:
-        print(f"⚠️ Skipped table creation: {e}")
+    Base.metadata.create_all(bind=engine, checkfirst=True)
+    print("✅ Database ready")
