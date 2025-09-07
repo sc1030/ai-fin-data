@@ -1,0 +1,11 @@
+streamlit
+pandas
+sqlalchemy
+pdfplumber
+openpyxl
+yfinance
+requests
+python-dotenv
+apscheduler
+sumy            # fallback summarizer (lightweight)
+plotly
