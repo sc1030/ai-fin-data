@@ -9,3 +9,9 @@ python-dotenv
 apscheduler
 sumy            # fallback summarizer (lightweight)
 plotly
+GoogleNews
+numpy
+matplotlib
+requests
+beautifulsoup4
+lxml
