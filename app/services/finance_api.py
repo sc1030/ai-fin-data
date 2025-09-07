@@ -5,7 +5,14 @@ def fetch_yfinance_history(ticker: str, period: str = "1y", interval: str = "1d"
     """
     Returns a DataFrame with Date, Open, High, Low, Close, Volume for the given ticker
     """
-    df = yf.download(tickers=ticker, period=period, interval=interval, progress=False)
+    df = yf.download(
+        tickers=ticker,
+        period=period,
+        interval=interval,
+        progress=False,
+        auto_adjust=False  # 👈 explicitly set to avoid FutureWarning
+    )
+    
     if df.empty:
         return df
 
