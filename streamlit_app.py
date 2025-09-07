@@ -139,7 +139,7 @@ elif selected == "Upload & Parse":
         fname = uploaded_file.name
         file_bytes = uploaded_file.read()
         try:
-            # ---------------- PDF ----------------
+            # PDF
             if fname.lower().endswith(".pdf"):
                 parsed = parse_pdf(file_bytes)
                 if not parsed["text"].strip():
@@ -149,6 +149,10 @@ elif selected == "Upload & Parse":
                 if parsed["tables"]:
                     for i, df in enumerate(parsed["tables"]):
                         st.write(f"Table {i+1}", df.head())
+                        # Save table to FinancialData if columns exist
+                        if set(["date","open","high","low","close","volume"]).issubset([c.lower() for c in df.columns]):
+                            inserted = save_financial_dataframe(fname, df)
+                            st.success(f"✅ Table {i+1}: {inserted} rows saved to database")
                 else:
                     st.info("No tables found in PDF.")
                 if st.button("Save Report to DB"):
@@ -157,23 +161,20 @@ elif selected == "Upload & Parse":
                     save_report_to_db(fname, parsed["text"], summary)
                     st.success("✅ Report saved")
             
-            # ---------------- Excel / CSV ----------------
+            # Excel / CSV
             else:
                 try:
                     sheets = parse_excel(file_bytes, fname)
                     if not sheets:
                         st.warning("⚠️ No sheets found in the uploaded Excel/CSV file.")
-
                     for name, df in sheets.items():
                         st.write("Sheet:", name)
                         st.dataframe(df.head())
-
-                        # Auto-save to FinancialData if columns exist
-                        required_cols = {"date","ticker","open","high","low","close","volume"}
-                        if required_cols.issubset(set(df.columns.str.lower())):
-                            inserted = save_financial_dataframe("CSV_Ticker", df)
-                            st.success(f"✅ {inserted} rows saved to FinancialData")
-
+                        # Save sheet to FinancialData if columns exist
+                        lower_cols = [c.lower() for c in df.columns]
+                        if set(["date","open","high","low","close","volume"]).issubset(lower_cols):
+                            inserted = save_financial_dataframe(name, df)
+                            st.success(f"✅ Sheet '{name}': {inserted} rows saved to database")
                     if st.button("Save Excel metadata"):
                         save_sourcefile(fname, "excel", metadata={"sheets": list(sheets.keys())})
                         st.success("✅ Excel metadata saved")
