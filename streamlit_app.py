@@ -126,12 +126,12 @@ def save_financial_dataframe(ticker, df, location=None):
         fd = FinancialData(
             ticker=ticker,
             date=date_val,
-            open=row.get("open") or row.get("Open"),
-            high=row.get("high") or row.get("High"),
-            low=row.get("low") or row.get("Low"),
-            close=row.get("close") or row.get("Close"),
-            volume=row.get("volume") or row.get("Volume"),
-            location=locals().get("location", None)  # Accept location argument
+            open=row["Open"] if "Open" in row else (row["open"] if "open" in row else None),
+            high=row["High"] if "High" in row else (row["high"] if "high" in row else None),
+            low=row["Low"] if "Low" in row else (row["low"] if "low" in row else None),
+            close=row["Close"] if "Close" in row else (row["close"] if "close" in row else None),
+            volume=row["Volume"] if "Volume" in row else (row["volume"] if "volume" in row else None),
+            location=location
         )
         db.add(fd)
         inserted += 1
@@ -198,6 +198,7 @@ if selected == "Dashboard":
         } for r in rows])
 
         # Sortable, filterable table
+        from st_aggrid import GridOptionsBuilder, AgGrid
         gb = GridOptionsBuilder.from_dataframe(df)
         gb.configure_pagination()
         gb.configure_default_column(editable=False, groupable=True)
