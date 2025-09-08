@@ -178,13 +178,46 @@ if selected == "Dashboard":
         highest_gainer = "-"
         most_active = "-"
 
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    col1.metric("Reports", reports_count)
-    col2.metric("Tickers Tracked", tickers)
-    col3.metric("Latest News", latest_news)
-    col4.metric("Avg Close Price", f"{avg_close:,.2f}")
-    col5.metric("Highest Gainer", highest_gainer)
-    col6.metric("Most Active Stock", most_active)
+    st.markdown("""
+    <style>
+    .dashboard-metric {
+        background: linear-gradient(90deg, #0d6efd 60%, #004080 100%);
+        color: #fff;
+        border-radius: 12px;
+        padding: 18px 12px;
+        margin: 0 8px 12px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        text-align: center;
+    }
+    .dashboard-metric .label {
+        font-size: 15px;
+        color: #d9eaff;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+    .dashboard-metric .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    cols = st.columns(6)
+    metrics = [
+        ("Reports", reports_count),
+        ("Tickers Tracked", tickers),
+        ("Latest News", latest_news),
+        ("Avg Close Price", f"{avg_close:,.2f}"),
+        ("Highest Gainer", highest_gainer),
+        ("Most Active Stock", most_active)
+    ]
+    for i, (label, value) in enumerate(metrics):
+        cols[i].markdown(f"""
+        <div class='dashboard-metric'>
+            <div class='label'>{label}</div>
+            <div class='value'>{value}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("� Financial Data Summary Table")
