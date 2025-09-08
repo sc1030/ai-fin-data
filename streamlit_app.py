@@ -276,78 +276,70 @@ elif selected == "Upload & Parse":
 # MARKET & NEWS
 # ---------------------------
 elif selected == "Market & News":
-    st.header("📈 Market Data & 📰 News")
+    st.subheader("📈 Market Data & 📰 News")
 
-    tickers_input = st.text_input(
-        "Tickers (comma separated, e.g. AAPL, MSFT, TCS.NS)",
-        "AAPL, MSFT, TCS.NS"
-    )
-    period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
+tickers_input = st.text_input(
+    "Tickers (comma separated, e.g. AAPL, MSFT, TCS.NS)",
+    "AAPL, MSFT, TCS.NS"
+)
+period = st.selectbox("Period", ["1mo", "3mo", "6mo", "1y", "5y"], index=3)
 
-    if st.button("Fetch Market Data"):
-        tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
-        df_list = []
+if st.button("Fetch Market Data"):
+    tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
+    combined = pd.DataFrame()
 
-        for tk in tickers:
-            df_t = fetch_yfinance_history(tk, period=period)
-            if df_t is not None and not df_t.empty:
+    for tk in tickers:
+        try:
+            import yfinance as yf
+            df_t = yf.download(tk, period=period, interval="1d")
+
+            if not df_t.empty:
                 df_t = df_t.reset_index()
                 df_t["ticker"] = tk
                 df_t.rename(
                     columns={
                         "Date": "date",
-                        "Close": "close",
                         "Open": "open",
                         "High": "high",
                         "Low": "low",
+                        "Close": "close",
+                        "Adj Close": "adj_close",
                         "Volume": "volume"
                     },
                     inplace=True
                 )
-                df_list.append(df_t)
-
-                # Save with geolocation
+                combined = pd.concat([combined, df_t], ignore_index=True)
                 loc = company_locations.get(tk, "37.77,-122.42")
                 save_financial_dataframe(tk, df_t, location=loc)
             else:
-                st.warning(f"⚠️ No market data for {tk}")
+                st.warning(f"⚠️ No data returned for {tk}")
+        except Exception as e:
+            st.error(f"❌ Failed to fetch {tk}: {e}")
 
-        if df_list:
-            combined = pd.concat(df_list, ignore_index=True)
-
-            st.subheader("📊 Market Data Sample")
-            st.dataframe(combined.head())
-
-            # Clean summary stats per ticker
-            summary_data = []
-            for tk in combined["ticker"].unique():
-                df_tk = combined[combined["ticker"] == tk]
-                avg_close = df_tk["close"].mean()
-                min_close = df_tk["close"].min()
-                max_close = df_tk["close"].max()
-                summary_data.append({
-                    "Ticker": tk,
-                    "Average Close": avg_close,
-                    "Min Close": min_close,
-                    "Max Close": max_close
-                })
-            summary_df = pd.DataFrame(summary_data)
-            st.subheader("📈 Summary Statistics")
-            st.dataframe(summary_df)
-
-            # Plot only if required columns exist
-            if set(["date", "close", "ticker"]).issubset(combined.columns):
-                fig = px.line(
-                    combined,
-                    x="date",
-                    y="close",
-                    color="ticker",
-                    title="Close Price Over Time",
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning("⚠️ Market data could not be plotted due to missing columns.")
-
+    if not combined.empty:
+        st.write("📊 Market Data Sample", combined.head())
+        st.write("📈 Summary Statistics")
+        stats = combined.groupby("ticker")["close"].agg(
+            ["mean", "min", "max"]
+        ).reset_index()
+        stats.rename(
+            columns={"mean": "Average Close", "min": "Min Close", "max": "Max Close"},
+            inplace=True
+        )
+        st.dataframe(stats)
+        try:
+            fig = px.line(
+                combined,
+                x="date",
+                y="close",
+                color="ticker",
+                title="Close Price Over Time"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.warning(f"⚠️ Market data could not be plotted: {e}")
+    else:
+        st.warning("⚠️ No market data could be combined for plotting.")
     st.markdown("---")
 
     st.subheader("📰 Latest News by Ticker")
