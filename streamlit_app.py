@@ -180,7 +180,7 @@ if selected == "Dashboard":
 
     st.markdown("""
     <style>
-    .dashboard-metric { border-radius: 12px; padding: 18px 12px; margin: 0 8px 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.07); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .dashboard-metric { border-radius: 12px; padding: 18px 12px; margin: 0 8px 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.07); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 140px; max-width: 170px; word-break: break-word; }
     .dashboard-metric.metric-0 { background: linear-gradient(90deg, #4e54c8 60%, #8f94fb 100%); }
     .dashboard-metric.metric-1 { background: linear-gradient(90deg, #43cea2 60%, #185a9d 100%); }
     .dashboard-metric.metric-2 { background: linear-gradient(90deg, #ff512f 60%, #dd2476 100%); }
@@ -188,7 +188,7 @@ if selected == "Dashboard":
     .dashboard-metric.metric-4 { background: linear-gradient(90deg, #11998e 60%, #38ef7d 100%); }
     .dashboard-metric.metric-5 { background: linear-gradient(90deg, #fc5c7d 60%, #6a82fb 100%); }
     .dashboard-metric .label { font-size: 15px; color: #fff; font-weight: 500; margin-bottom: 6px; }
-    .dashboard-metric .value { font-size: 28px; font-weight: 700; color: #fff; min-width: 90px; text-align: center; }
+    .dashboard-metric .value { font-size: 28px; font-weight: 700; color: #fff; width: 100%; text-align: center; word-break: break-word; }
     </style>
     """, unsafe_allow_html=True)
     cols = st.columns(6)
