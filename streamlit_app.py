@@ -15,14 +15,12 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from app.db import init_db, SessionLocal
-init_db()
 from app.models import SourceFile, Report, FinancialData
 from app.data_parsing.pdf_parser import parse_pdf
 from app.data_parsing.excel_parser import parse_excel
 from app.nlp.summarizer import summarize_text
 from app.services.finance_api import fetch_yfinance_history
 from app.services.news_api import fetch_news
-from app.nlp.summarizer import summarize_text
 from app.automation import start_scheduler
 import plotly.express as px
 from streamlit_option_menu import option_menu
@@ -37,6 +35,7 @@ import pandas as pd
 import plotly.express as px
 import folium
 from streamlit_folium import st_folium
+from st_aggrid import AgGrid, GridOptionsBuilder
 # ---------------------------
 # CUSTOM CSS THEME
 # ---------------------------
@@ -113,24 +112,28 @@ def save_financial_dataframe(ticker, df, location=None):
     db = SessionLocal()
     inserted = 0
     for _, row in df.iterrows():
-        date_val = None
+        # Ensure correct datetime and scalar values
         if "date" in row:
-            date_val = pd.to_datetime(row["date"])
-            if hasattr(date_val, "to_pydatetime"):
-                date_val = date_val.to_pydatetime()
+            date_val = pd.to_datetime(row["date"]).to_pydatetime()
         elif "Date" in row:
-            date_val = pd.to_datetime(row["Date"])
-            if hasattr(date_val, "to_pydatetime"):
-                date_val = date_val.to_pydatetime()
+            date_val = pd.to_datetime(row["Date"]).to_pydatetime()
+        else:
+            date_val = None
+
+        def get_scalar(row, key):
+            val = row.get(key)
+            if isinstance(val, pd.Series):
+                return val.iloc[0]
+            return val
 
         fd = FinancialData(
             ticker=ticker,
             date=date_val,
-            open=row["Open"] if "Open" in row else (row["open"] if "open" in row else None),
-            high=row["High"] if "High" in row else (row["high"] if "high" in row else None),
-            low=row["Low"] if "Low" in row else (row["low"] if "low" in row else None),
-            close=row["Close"] if "Close" in row else (row["close"] if "close" in row else None),
-            volume=row["Volume"] if "Volume" in row else (row["volume"] if "volume" in row else None),
+            open=float(row.get("open") or row.get("Open") or 0),
+            high=float(row.get("high") or row.get("High") or 0),
+            low=float(row.get("low") or row.get("Low") or 0),
+            close=float(row.get("close") or row.get("Close") or 0),
+            volume=int(row.get("volume") or row.get("Volume") or 0),
             location=location
         )
         db.add(fd)
@@ -198,7 +201,6 @@ if selected == "Dashboard":
         } for r in rows])
 
         # Sortable, filterable table
-        from st_aggrid import GridOptionsBuilder, AgGrid
         gb = GridOptionsBuilder.from_dataframe(df)
         gb.configure_pagination()
         gb.configure_default_column(editable=False, groupable=True)
@@ -340,11 +342,7 @@ elif selected == "Market & News":
             for art in news.get("articles", []):
                 st.markdown(f"**{art['title']}** ({art['source']})")
                 st.caption(art.get("publishedAt", ""))
-                desc = art.get("description", "")
-                if desc:
-                    summary = summarize_text(desc, max_length=100)
-                    st.write(f"**Summary:** {summary}")
-                st.write(desc)
+                st.write(art["description"])
                 st.markdown(f"[Read more]({art['url']})")
                 st.markdown("---")
 
