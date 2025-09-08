@@ -309,15 +309,20 @@ elif selected == "Market & News":
             st.subheader("📈 Summary Statistics")
             st.table(summary)
 
-            # Multi-ticker line chart
-            fig = px.line(
-                combined,
-                x="date",
-                y="close",
-                color="ticker",
-                title="Close Price Over Time",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            # Ensure correct format for Plotly Express
+            combined = combined.reset_index(drop=True)
+            # Only plot if required columns exist
+            if set(["date", "close", "ticker"]).issubset(combined.columns):
+                fig = px.line(
+                    combined,
+                    x="date",
+                    y="close",
+                    color="ticker",
+                    title="Close Price Over Time",
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("Market data could not be plotted due to missing columns.")
 
     st.markdown("---")
 
