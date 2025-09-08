@@ -180,26 +180,15 @@ if selected == "Dashboard":
 
     st.markdown("""
     <style>
-    .dashboard-metric {
-        background: linear-gradient(90deg, #0d6efd 60%, #004080 100%);
-        color: #fff;
-        border-radius: 12px;
-        padding: 18px 12px;
-        margin: 0 8px 12px 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-        text-align: center;
-    }
-    .dashboard-metric .label {
-        font-size: 15px;
-        color: #d9eaff;
-        font-weight: 500;
-        margin-bottom: 6px;
-    }
-    .dashboard-metric .value {
-        font-size: 28px;
-        font-weight: 700;
-        color: #fff;
-    }
+    .dashboard-metric { border-radius: 12px; padding: 18px 12px; margin: 0 8px 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.07); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .dashboard-metric.metric-0 { background: linear-gradient(90deg, #4e54c8 60%, #8f94fb 100%); }
+    .dashboard-metric.metric-1 { background: linear-gradient(90deg, #43cea2 60%, #185a9d 100%); }
+    .dashboard-metric.metric-2 { background: linear-gradient(90deg, #ff512f 60%, #dd2476 100%); }
+    .dashboard-metric.metric-3 { background: linear-gradient(90deg, #f7971e 60%, #ffd200 100%); }
+    .dashboard-metric.metric-4 { background: linear-gradient(90deg, #11998e 60%, #38ef7d 100%); }
+    .dashboard-metric.metric-5 { background: linear-gradient(90deg, #fc5c7d 60%, #6a82fb 100%); }
+    .dashboard-metric .label { font-size: 15px; color: #fff; font-weight: 500; margin-bottom: 6px; }
+    .dashboard-metric .value { font-size: 28px; font-weight: 700; color: #fff; min-width: 90px; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
     cols = st.columns(6)
@@ -213,7 +202,7 @@ if selected == "Dashboard":
     ]
     for i, (label, value) in enumerate(metrics):
         cols[i].markdown(f"""
-        <div class='dashboard-metric'>
+        <div class='dashboard-metric metric-{i}'>
             <div class='label'>{label}</div>
             <div class='value'>{value}</div>
         </div>
