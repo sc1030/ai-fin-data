@@ -111,23 +111,30 @@ def save_financial_dataframe(ticker, df, location=None):
         return 0
     db = SessionLocal()
     inserted = 0
-    for _, row in df.iterrows():
-        # Pick correct date column
-        if "date" in df.columns:
-            date_val = pd.to_datetime(row["date"]).to_pydatetime()
-        elif "Date" in df.columns:
-            date_val = pd.to_datetime(row["Date"]).to_pydatetime()
+    for _, row in df.reset_index().iterrows():
+        # Ensure correct datetime
+        if "date" in row:
+            date_val = pd.to_datetime(row["date"])
+        elif "Date" in row:
+            date_val = pd.to_datetime(row["Date"])
         else:
-            continue  # skip if no date column
+            continue
+
+        # Convert to Python datetime safely
+        if isinstance(date_val, pd.Series):
+            date_val = date_val.iloc[0]
+        if hasattr(date_val, "to_pydatetime"):
+            date_val = date_val.to_pydatetime()
+
         try:
             fd = FinancialData(
                 ticker=ticker,
                 date=date_val,
-                open=float(row.get("open") or row.get("Open") or 0),
-                high=float(row.get("high") or row.get("High") or 0),
-                low=float(row.get("low") or row.get("Low") or 0),
-                close=float(row.get("close") or row.get("Close") or 0),
-                volume=int(row.get("volume") or row.get("Volume") or 0),
+                open=float(row.get("Open", row.get("open", 0))),
+                high=float(row.get("High", row.get("high", 0))),
+                low=float(row.get("Low", row.get("low", 0))),
+                close=float(row.get("Close", row.get("close", 0))),
+                volume=float(row.get("Volume", row.get("volume", 0))),
                 location=location
             )
             db.add(fd)
