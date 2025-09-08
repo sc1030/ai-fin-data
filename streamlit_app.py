@@ -15,6 +15,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from app.db import init_db, SessionLocal
+init_db()
 from app.models import SourceFile, Report, FinancialData
 from app.data_parsing.pdf_parser import parse_pdf
 from app.data_parsing.excel_parser import parse_excel
