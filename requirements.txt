@@ -17,3 +17,4 @@ beautifulsoup4
 lxml
 streamlit_option_menu
 psycopg2-binary
+folium
