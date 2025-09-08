@@ -36,7 +36,6 @@ import pandas as pd
 import plotly.express as px
 import folium
 from streamlit_folium import st_folium
-from st_aggrid import AgGrid, GridOptionsBuilder
 # ---------------------------
 # CUSTOM CSS THEME
 # ---------------------------
