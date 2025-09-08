@@ -291,7 +291,19 @@ elif selected == "Market & News":
         for tk in tickers:
             df_t = fetch_yfinance_history(tk, period=period)
             if df_t is not None and not df_t.empty:
+                df_t = df_t.reset_index()
                 df_t["ticker"] = tk
+                df_t.rename(
+                    columns={
+                        "Date": "date",
+                        "Close": "close",
+                        "Open": "open",
+                        "High": "high",
+                        "Low": "low",
+                        "Volume": "volume"
+                    },
+                    inplace=True
+                )
                 df_list.append(df_t)
 
                 # Save with geolocation
