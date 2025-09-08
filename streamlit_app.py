@@ -111,11 +111,18 @@ def save_financial_dataframe(ticker, df, location=None):
         return 0
     db = SessionLocal()
     inserted = 0
-    for date_val, row in df.iterrows():
+    for _, row in df.iterrows():
+        # Pick correct date column
+        if "date" in df.columns:
+            date_val = pd.to_datetime(row["date"]).to_pydatetime()
+        elif "Date" in df.columns:
+            date_val = pd.to_datetime(row["Date"]).to_pydatetime()
+        else:
+            continue  # skip if no date column
         try:
             fd = FinancialData(
                 ticker=ticker,
-                date=pd.to_datetime(date_val).to_pydatetime(),
+                date=date_val,
                 open=float(row.get("open") or row.get("Open") or 0),
                 high=float(row.get("high") or row.get("High") or 0),
                 low=float(row.get("low") or row.get("Low") or 0),
@@ -292,26 +299,24 @@ elif selected == "Market & News":
             st.subheader("📊 Market Data Sample")
             st.dataframe(combined.head())
 
-            # Summary stats per ticker
-            summary = (
-                combined.groupby("ticker")["close"]
-                .agg(["mean", "min", "max"])
-                .reset_index()
-            )
-            summary.rename(
-                columns={
-                    "mean": "Average Close",
-                    "min": "Min Close",
-                    "max": "Max Close",
-                },
-                inplace=True,
-            )
+            # Clean summary stats per ticker
+            summary_data = []
+            for tk in combined["ticker"].unique():
+                df_tk = combined[combined["ticker"] == tk]
+                avg_close = df_tk["close"].mean()
+                min_close = df_tk["close"].min()
+                max_close = df_tk["close"].max()
+                summary_data.append({
+                    "Ticker": tk,
+                    "Average Close": avg_close,
+                    "Min Close": min_close,
+                    "Max Close": max_close
+                })
+            summary_df = pd.DataFrame(summary_data)
             st.subheader("📈 Summary Statistics")
-            st.table(summary)
+            st.dataframe(summary_df)
 
-            # Ensure correct format for Plotly Express
-            combined = combined.reset_index(drop=True)
-            # Only plot if required columns exist
+            # Plot only if required columns exist
             if set(["date", "close", "ticker"]).issubset(combined.columns):
                 fig = px.line(
                     combined,
@@ -322,7 +327,7 @@ elif selected == "Market & News":
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.warning("Market data could not be plotted due to missing columns.")
+                st.warning("⚠️ Market data could not be plotted due to missing columns.")
 
     st.markdown("---")
 
