@@ -29,3 +29,5 @@ class FinancialData(Base):
     low = Column(Float)
     close = Column(Float)
     volume = Column(Float)
+    # 🆕 Add this field for map coordinates
+    location = Column(String, nullable=True)  # e.g. "37.77,-122.42"
