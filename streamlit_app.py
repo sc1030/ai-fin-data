@@ -111,33 +111,22 @@ def save_financial_dataframe(ticker, df, location=None):
         return 0
     db = SessionLocal()
     inserted = 0
-    for _, row in df.iterrows():
-        # Ensure correct datetime and scalar values
-        if "date" in row:
-            date_val = pd.to_datetime(row["date"]).to_pydatetime()
-        elif "Date" in row:
-            date_val = pd.to_datetime(row["Date"]).to_pydatetime()
-        else:
-            date_val = None
-
-        def get_scalar(row, key):
-            val = row.get(key)
-            if isinstance(val, pd.Series):
-                return val.iloc[0]
-            return val
-
-        fd = FinancialData(
-            ticker=ticker,
-            date=date_val,
-            open=float(row.get("open") or row.get("Open") or 0),
-            high=float(row.get("high") or row.get("High") or 0),
-            low=float(row.get("low") or row.get("Low") or 0),
-            close=float(row.get("close") or row.get("Close") or 0),
-            volume=int(row.get("volume") or row.get("Volume") or 0),
-            location=location
-        )
-        db.add(fd)
-        inserted += 1
+    for date_val, row in df.iterrows():
+        try:
+            fd = FinancialData(
+                ticker=ticker,
+                date=pd.to_datetime(date_val).to_pydatetime(),
+                open=float(row.get("open") or row.get("Open") or 0),
+                high=float(row.get("high") or row.get("High") or 0),
+                low=float(row.get("low") or row.get("Low") or 0),
+                close=float(row.get("close") or row.get("Close") or 0),
+                volume=int(row.get("volume") or row.get("Volume") or 0),
+                location=location
+            )
+            db.add(fd)
+            inserted += 1
+        except Exception as e:
+            print(f"⚠️ Skipped row due to error: {e}")
     db.commit()
     db.close()
     return inserted
