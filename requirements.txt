@@ -19,4 +19,4 @@ streamlit_option_menu
 psycopg2-binary
 folium
 streamlit_folium
-st_aggrid
+streamlit-aggrid
